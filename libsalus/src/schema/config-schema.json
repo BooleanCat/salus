@@ -1,0 +1,32 @@
+{
+    "description": "Open Container Initiative Runtime Specification Container Configuration Schema",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        "ociVersion": {
+            "description": "The version of Open Container Initiative Runtime Specification that the document complies with",
+            "type": "string"
+        },
+        "hostname": {
+            "type": "string"
+        },
+        "root": {
+            "description": "Configures the container's root filesystem.",
+            "type": "object",
+            "required": [
+                "path"
+            ],
+            "properties": {
+                "path": {
+                    "type": "string"
+                },
+                "readonly": {
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "required": [
+        "ociVersion"
+    ]
+}

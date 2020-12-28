@@ -4,7 +4,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Config {
     pub oci_version: String,
-    pub root: ConfigRoot,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hostname: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root: Option<ConfigRoot>,
 }
 
 #[serde(rename_all = "camelCase")]
@@ -19,32 +24,36 @@ pub struct ConfigRoot {
 #[cfg(test)]
 mod tests {
     use super::{Config, ConfigRoot};
+    use jsonschema::JSONSchema;
     use serde_json;
+    use std::fs::File;
+    use std::io::BufReader;
 
     #[test]
-    fn config_deserialize() {
-        let config: Config = serde_json::from_str(
-            r#"
-            {
-                "ociVersion": "0.1.0",
-                "root": {
-                    "path": "/foo/bar",
-                    "readOnly": true
-                }
-            }
-        "#,
-        )
-        .unwrap();
+    fn validate_schema() {
+        let config = Config {
+            oci_version: String::from("0.1.0"),
+            root: Some(ConfigRoot {
+                path: String::from("/foo/bar"),
+                read_only: Some(true),
+            }),
+            hostname: Some(String::from("baz")),
+        };
 
-        assert_eq!(
-            config,
-            Config {
-                oci_version: String::from("0.1.0"),
-                root: ConfigRoot {
-                    path: String::from("/foo/bar"),
-                    read_only: Some(true),
-                }
+        if let Err(errs) = JSONSchema::compile(
+            &serde_json::from_reader(BufReader::new(
+                File::open("src/schema/config-schema.json").unwrap(),
+            ))
+            .unwrap(),
+        )
+        .unwrap()
+        .validate(&serde_json::to_value(config).unwrap())
+        {
+            for err in errs {
+                println!("{}", err);
             }
-        );
+
+            panic!("failed validating config schema");
+        }
     }
 }
