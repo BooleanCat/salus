@@ -29,6 +29,18 @@ mod tests {
     use std::fs::File;
     use std::io::BufReader;
 
+    macro_rules! get_schema {
+        () => {
+            JSONSchema::compile(
+                &serde_json::from_reader(BufReader::new(
+                    &File::open("src/schema/config-schema.json").unwrap(),
+                ))
+                .unwrap(),
+            )
+            .unwrap()
+        };
+    }
+
     #[test]
     fn validate_schema() {
         let config = Config {
@@ -40,15 +52,7 @@ mod tests {
             hostname: Some(String::from("baz")),
         };
 
-        if let Err(errs) = JSONSchema::compile(
-            &serde_json::from_reader(BufReader::new(
-                File::open("src/schema/config-schema.json").unwrap(),
-            ))
-            .unwrap(),
-        )
-        .unwrap()
-        .validate(&serde_json::to_value(config).unwrap())
-        {
+        if let Err(errs) = get_schema!().validate(&serde_json::to_value(config).unwrap()) {
             for err in errs {
                 println!("{}", err);
             }
