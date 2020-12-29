@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[serde(rename_all = "camelCase")]
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Root {
     pub path: String,
 
@@ -11,7 +11,7 @@ pub struct Root {
 
 impl Root {
     pub fn new(path: &str) -> Self {
-        Root {
+        Self {
             path: String::from(path),
             read_only: None,
         }
@@ -37,7 +37,7 @@ mod tests {
     #[test]
     fn serialize_optional_fields() {
         let want = serde_json::json!({
-            "path": String::from("/foo/bar"),
+            "path": "/foo/bar",
             "readOnly": true
         });
 
