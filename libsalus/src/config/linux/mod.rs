@@ -1,6 +1,7 @@
 mod device;
 mod id_mapping;
 mod namespace;
+pub mod resources;
 
 pub use self::device::Device;
 pub use self::id_mapping::IDMapping;
@@ -22,6 +23,12 @@ pub struct Linux {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub devices: Option<Vec<Device>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cgroups_path: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resources: Option<resources::Resources>,
 }
 
 impl Linux {
@@ -32,7 +39,7 @@ impl Linux {
 
 #[cfg(test)]
 mod tests {
-    use super::{Device, IDMapping, Linux, Namespace};
+    use super::{resources, Device, IDMapping, Linux, Namespace};
     use serde_json;
 
     #[test]
@@ -73,7 +80,9 @@ mod tests {
                     "major": 10,
                     "minor": 229
                 }
-            ]
+            ],
+            "cgroupsPath": "/cgroups",
+            "resources": {}
         });
 
         let got = serde_json::to_value(Linux {
@@ -81,6 +90,8 @@ mod tests {
             uid_mappings: Some(vec![IDMapping::new(0, 2000, 100)]),
             gid_mappings: Some(vec![IDMapping::new(0, 3000, 200)]),
             devices: Some(vec![Device::new("c", "/dev/fuse", 10, 229)]),
+            cgroups_path: Some(String::from("/cgroups")),
+            resources: Some(resources::Resources::new()),
         })
         .unwrap();
 
