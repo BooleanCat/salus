@@ -12,6 +12,16 @@ pub struct Config {
     pub root: Option<ConfigRoot>,
 }
 
+impl Config {
+    pub fn new(oci_version: &str) -> Self {
+        Config {
+            oci_version: String::from(oci_version),
+            hostname: None,
+            root: None,
+        }
+    }
+}
+
 #[serde(rename_all = "camelCase")]
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ConfigRoot {
@@ -21,43 +31,48 @@ pub struct ConfigRoot {
     pub read_only: Option<bool>,
 }
 
+impl ConfigRoot {
+    pub fn new(path: &str) -> Self {
+        ConfigRoot {
+            path: String::from(path),
+            read_only: None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Config, ConfigRoot};
-    use jsonschema::JSONSchema;
     use serde_json;
-    use std::fs::File;
-    use std::io::BufReader;
 
-    macro_rules! get_schema {
-        () => {
-            JSONSchema::compile(
-                &serde_json::from_reader(BufReader::new(
-                    &File::open("src/schema/config-schema.json").unwrap(),
-                ))
-                .unwrap(),
-            )
-            .unwrap()
-        };
+    #[test]
+    fn serialize() {
+        let want = serde_json::json!({
+            "ociVersion": "0.1.0"
+        });
+
+        let got = serde_json::to_value(Config::new("0.1.0")).unwrap();
+
+        assert_eq!(want, got);
     }
 
     #[test]
-    fn validate_schema() {
-        let config = Config {
-            oci_version: String::from("0.1.0"),
-            root: Some(ConfigRoot {
-                path: String::from("/foo/bar"),
-                read_only: Some(true),
-            }),
-            hostname: Some(String::from("baz")),
-        };
-
-        if let Err(errs) = get_schema!().validate(&serde_json::to_value(config).unwrap()) {
-            for err in errs {
-                println!("{}", err);
+    fn serialize_optional_fields() {
+        let want = serde_json::json!({
+            "ociVersion": "0.1.0",
+            "hostname": "baz",
+            "root": {
+                "path": String::from("/foo/bar"),
             }
+        });
 
-            panic!("failed validating config schema");
-        }
+        let got = serde_json::to_value(Config {
+            oci_version: String::from("0.1.0"),
+            root: Some(ConfigRoot::new("/foo/bar")),
+            hostname: Some(String::from("baz")),
+        })
+        .unwrap();
+
+        assert_eq!(want, got);
     }
 }
