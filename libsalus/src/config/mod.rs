@@ -1,5 +1,6 @@
 mod capabilities;
 mod console_size;
+mod linux;
 mod mount;
 mod process;
 mod rlimit;
@@ -8,6 +9,7 @@ mod user;
 
 pub use capabilities::Capabilities;
 pub use console_size::ConsoleSize;
+pub use linux::Linux;
 pub use mount::Mount;
 pub use process::Process;
 pub use rlimit::Rlimit;
@@ -35,6 +37,9 @@ pub struct Config {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user: Option<User>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub linux: Option<Linux>,
 }
 
 impl Config {
@@ -46,13 +51,14 @@ impl Config {
             mounts: None,
             process: None,
             user: None,
+            linux: None,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Config, Mount, Process, Root, User};
+    use super::{Config, Linux, Mount, Process, Root, User};
     use serde_json;
 
     #[test]
@@ -84,7 +90,8 @@ mod tests {
             },
             "user": {
                 "username": "pikachu"
-            }
+            },
+            "linux": {}
         });
 
         let got = serde_json::to_value(Config {
@@ -95,6 +102,7 @@ mod tests {
             user: Some(User::Windows {
                 username: Some(String::from("pikachu")),
             }),
+            linux: Some(Linux::new()),
             ..Config::new("0.1.0")
         })
         .unwrap();
