@@ -4,6 +4,7 @@ mod mount;
 mod process;
 mod rlimit;
 mod root;
+mod user;
 
 pub use capabilities::Capabilities;
 pub use console_size::ConsoleSize;
@@ -11,6 +12,7 @@ pub use mount::Mount;
 pub use process::Process;
 pub use rlimit::Rlimit;
 pub use root::Root;
+pub use user::User;
 
 use serde::{Deserialize, Serialize};
 
@@ -30,6 +32,9 @@ pub struct Config {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub process: Option<Process>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub user: Option<User>,
 }
 
 impl Config {
@@ -40,13 +45,14 @@ impl Config {
             root: None,
             mounts: None,
             process: None,
+            user: None,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Config, Mount, Process, Root};
+    use super::{Config, Mount, Process, Root, User};
     use serde_json;
 
     #[test]
@@ -75,6 +81,9 @@ mod tests {
             ],
             "process": {
                 "cwd": "/here"
+            },
+            "user": {
+                "username": "pikachu"
             }
         });
 
@@ -83,6 +92,9 @@ mod tests {
             hostname: Some(String::from("baz")),
             mounts: Some(vec![Mount::new("/bar/baz")]),
             process: Some(Process::new("/here")),
+            user: Some(User::Windows {
+                username: Some(String::from("pikachu")),
+            }),
             ..Config::new("0.1.0")
         })
         .unwrap();
