@@ -1,6 +1,8 @@
+mod device;
 mod id_mapping;
 mod namespace;
 
+pub use self::device::Device;
 pub use self::id_mapping::IDMapping;
 pub use self::namespace::Namespace;
 
@@ -17,6 +19,9 @@ pub struct Linux {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gid_mappings: Option<Vec<IDMapping>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub devices: Option<Vec<Device>>,
 }
 
 impl Linux {
@@ -27,7 +32,7 @@ impl Linux {
 
 #[cfg(test)]
 mod tests {
-    use super::{IDMapping, Linux, Namespace};
+    use super::{Device, IDMapping, Linux, Namespace};
     use serde_json;
 
     #[test]
@@ -60,6 +65,14 @@ mod tests {
                     "hostID": 3000,
                     "size": 200
                 }
+            ],
+            "devices": [
+                {
+                    "type": "c",
+                    "path": "/dev/fuse",
+                    "major": 10,
+                    "minor": 229
+                }
             ]
         });
 
@@ -67,6 +80,7 @@ mod tests {
             namespaces: Some(vec![Namespace::new("pid")]),
             uid_mappings: Some(vec![IDMapping::new(0, 2000, 100)]),
             gid_mappings: Some(vec![IDMapping::new(0, 3000, 200)]),
+            devices: Some(vec![Device::new("c", "/dev/fuse", 10, 229)]),
         })
         .unwrap();
 
