@@ -1,6 +1,6 @@
 mod capabilities;
 mod console_size;
-mod linux;
+pub mod linux;
 mod mount;
 mod process;
 mod rlimit;
@@ -9,7 +9,6 @@ mod user;
 
 pub use capabilities::Capabilities;
 pub use console_size::ConsoleSize;
-pub use linux::Linux;
 pub use mount::Mount;
 pub use process::Process;
 pub use rlimit::Rlimit;
@@ -39,7 +38,7 @@ pub struct Config {
     pub user: Option<User>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub linux: Option<Linux>,
+    pub linux: Option<linux::Linux>,
 }
 
 impl Config {
@@ -58,7 +57,7 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
-    use super::{Config, Linux, Mount, Process, Root, User};
+    use super::{linux::Linux, Config, Mount, Process, Root, User};
     use serde_json;
 
     #[test]
