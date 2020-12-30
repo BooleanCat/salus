@@ -6,6 +6,7 @@ mod memory;
 mod network;
 mod pids;
 mod priority;
+mod rdma;
 mod throttle_device;
 mod weight_device;
 
@@ -17,10 +18,12 @@ pub use memory::Memory;
 pub use network::Network;
 pub use pids::PIDs;
 pub use priority::Priority;
+pub use rdma::RDMA;
 pub use throttle_device::ThrottleDevice;
 pub use weight_device::WeightDevice;
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[serde(rename_all = "camelCase")]
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -45,6 +48,9 @@ pub struct Resources {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pids: Option<PIDs>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rdma: Option<HashMap<String, RDMA>>,
 }
 
 impl Resources {
@@ -55,8 +61,9 @@ impl Resources {
 
 #[cfg(test)]
 mod tests {
-    use super::{BlockIO, Device, HugePageLimit, Memory, Network, PIDs, Resources, CPU};
+    use super::{BlockIO, Device, HugePageLimit, Memory, Network, PIDs, Resources, CPU, RDMA};
     use serde_json;
+    use std::collections::HashMap;
 
     #[test]
     fn serialize() {
@@ -87,8 +94,14 @@ mod tests {
             "network": {},
             "pids": {
                 "limit": 500
+            },
+            "rdma": {
+                "mlx5_1": {}
             }
         });
+
+        let mut rdma = HashMap::new();
+        rdma.insert(String::from("mlx5_1"), RDMA::new());
 
         let got = serde_json::to_value(Resources {
             devices: Some(vec![Device::new(true)]),
@@ -98,6 +111,7 @@ mod tests {
             huge_page_limits: Some(vec![HugePageLimit::new("2MB", 209715200)]),
             network: Some(Network::new()),
             pids: Some(PIDs::new(500)),
+            rdma: Some(rdma),
         })
         .unwrap();
 
