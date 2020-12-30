@@ -1,10 +1,16 @@
+mod block_io;
 mod cpu;
 mod device;
 mod memory;
+mod throttle_device;
+mod weight_device;
 
+pub use block_io::BlockIO;
 pub use cpu::CPU;
 pub use device::Device;
 pub use memory::Memory;
+pub use throttle_device::ThrottleDevice;
+pub use weight_device::WeightDevice;
 
 use serde::{Deserialize, Serialize};
 
@@ -18,6 +24,9 @@ pub struct Resources {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cpu: Option<CPU>,
+
+    #[serde(rename = "blockIO", skip_serializing_if = "Option::is_none")]
+    pub block_io: Option<BlockIO>,
 }
 
 impl Resources {
@@ -28,7 +37,7 @@ impl Resources {
 
 #[cfg(test)]
 mod tests {
-    use super::{Device, Memory, Resources, CPU};
+    use super::{BlockIO, Device, Memory, Resources, CPU};
     use serde_json;
 
     #[test]
@@ -49,13 +58,15 @@ mod tests {
                 }
             ],
             "memory": {},
-            "cpu": {}
+            "cpu": {},
+            "blockIO": {}
         });
 
         let got = serde_json::to_value(Resources {
             devices: Some(vec![Device::new(true)]),
             memory: Some(Memory::new()),
             cpu: Some(CPU::new()),
+            block_io: Some(BlockIO::new()),
         })
         .unwrap();
 
