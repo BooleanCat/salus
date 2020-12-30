@@ -4,6 +4,7 @@ mod device;
 mod huge_page_limit;
 mod memory;
 mod network;
+mod pids;
 mod priority;
 mod throttle_device;
 mod weight_device;
@@ -14,6 +15,7 @@ pub use device::Device;
 pub use huge_page_limit::HugePageLimit;
 pub use memory::Memory;
 pub use network::Network;
+pub use pids::PIDs;
 pub use priority::Priority;
 pub use throttle_device::ThrottleDevice;
 pub use weight_device::WeightDevice;
@@ -40,6 +42,9 @@ pub struct Resources {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub network: Option<Network>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pids: Option<PIDs>,
 }
 
 impl Resources {
@@ -50,7 +55,7 @@ impl Resources {
 
 #[cfg(test)]
 mod tests {
-    use super::{BlockIO, Device, HugePageLimit, Memory, Network, Resources, CPU};
+    use super::{BlockIO, Device, HugePageLimit, Memory, Network, PIDs, Resources, CPU};
     use serde_json;
 
     #[test]
@@ -79,7 +84,10 @@ mod tests {
                     "limit": 209715200
                 }
             ],
-            "network": {}
+            "network": {},
+            "pids": {
+                "limit": 500
+            }
         });
 
         let got = serde_json::to_value(Resources {
@@ -89,6 +97,7 @@ mod tests {
             block_io: Some(BlockIO::new()),
             huge_page_limits: Some(vec![HugePageLimit::new("2MB", 209715200)]),
             network: Some(Network::new()),
+            pids: Some(PIDs::new(500)),
         })
         .unwrap();
 
