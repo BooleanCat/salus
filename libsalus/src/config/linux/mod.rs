@@ -3,11 +3,17 @@ mod id_mapping;
 mod intel_rdt;
 mod namespace;
 pub mod resources;
+mod seccomp;
+mod syscall;
+mod syscall_arg;
 
 pub use self::device::Device;
 pub use self::id_mapping::IDMapping;
 pub use self::namespace::Namespace;
 pub use intel_rdt::IntelRDT;
+pub use seccomp::Seccomp;
+pub use syscall::Syscall;
+pub use syscall_arg::SyscallArg;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -41,6 +47,9 @@ pub struct Linux {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sysctl: Option<HashMap<String, String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seccomp: Option<Seccomp>,
 }
 
 impl Linux {
@@ -51,7 +60,7 @@ impl Linux {
 
 #[cfg(test)]
 mod tests {
-    use super::{resources, Device, IDMapping, IntelRDT, Linux, Namespace};
+    use super::{resources, Device, IDMapping, IntelRDT, Linux, Namespace, Seccomp};
     use serde_json;
     use std::collections::HashMap;
 
@@ -102,6 +111,9 @@ mod tests {
             "intelRdt": {},
             "sysctl": {
                 "net.ipv4.ip_forward": "1"
+            },
+            "seccomp": {
+                "defaultAction": "SCMP_ACT_ALLOW"
             }
         });
 
@@ -121,6 +133,7 @@ mod tests {
             unified: Some(unified),
             intel_rdt: Some(IntelRDT::new()),
             sysctl: Some(sysctl),
+            seccomp: Some(Seccomp::new("SCMP_ACT_ALLOW")),
         })
         .unwrap();
 
