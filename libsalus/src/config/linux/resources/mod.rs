@@ -1,19 +1,26 @@
 mod block_io;
 mod cpu;
 mod device;
+mod huge_page_limit;
 mod memory;
+mod network;
+mod priority;
 mod throttle_device;
 mod weight_device;
 
 pub use block_io::BlockIO;
 pub use cpu::CPU;
 pub use device::Device;
+pub use huge_page_limit::HugePageLimit;
 pub use memory::Memory;
+pub use network::Network;
+pub use priority::Priority;
 pub use throttle_device::ThrottleDevice;
 pub use weight_device::WeightDevice;
 
 use serde::{Deserialize, Serialize};
 
+#[serde(rename_all = "camelCase")]
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Resources {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -27,6 +34,12 @@ pub struct Resources {
 
     #[serde(rename = "blockIO", skip_serializing_if = "Option::is_none")]
     pub block_io: Option<BlockIO>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub huge_page_limits: Option<Vec<HugePageLimit>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub network: Option<Network>,
 }
 
 impl Resources {
@@ -37,7 +50,7 @@ impl Resources {
 
 #[cfg(test)]
 mod tests {
-    use super::{BlockIO, Device, Memory, Resources, CPU};
+    use super::{BlockIO, Device, HugePageLimit, Memory, Network, Resources, CPU};
     use serde_json;
 
     #[test]
@@ -59,7 +72,14 @@ mod tests {
             ],
             "memory": {},
             "cpu": {},
-            "blockIO": {}
+            "blockIO": {},
+            "hugePageLimits": [
+                {
+                    "pageSize": "2MB",
+                    "limit": 209715200
+                }
+            ],
+            "network": {}
         });
 
         let got = serde_json::to_value(Resources {
@@ -67,6 +87,8 @@ mod tests {
             memory: Some(Memory::new()),
             cpu: Some(CPU::new()),
             block_io: Some(BlockIO::new()),
+            huge_page_limits: Some(vec![HugePageLimit::new("2MB", 209715200)]),
+            network: Some(Network::new()),
         })
         .unwrap();
 
