@@ -2,6 +2,7 @@ mod device;
 mod id_mapping;
 mod intel_rdt;
 mod namespace;
+mod personality;
 pub mod resources;
 mod seccomp;
 mod syscall;
@@ -11,6 +12,7 @@ pub use self::device::Device;
 pub use self::id_mapping::IDMapping;
 pub use self::namespace::Namespace;
 pub use intel_rdt::IntelRDT;
+pub use personality::Personality;
 pub use seccomp::Seccomp;
 pub use syscall::Syscall;
 pub use syscall_arg::SyscallArg;
@@ -50,6 +52,21 @@ pub struct Linux {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seccomp: Option<Seccomp>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rootfs_propagation: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub masked_paths: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub readonly_paths: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mount_label: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub personality: Option<Personality>,
 }
 
 impl Linux {
@@ -60,7 +77,7 @@ impl Linux {
 
 #[cfg(test)]
 mod tests {
-    use super::{resources, Device, IDMapping, IntelRDT, Linux, Namespace, Seccomp};
+    use super::{resources, Device, IDMapping, IntelRDT, Linux, Namespace, Personality, Seccomp};
     use serde_json;
     use std::collections::HashMap;
 
@@ -114,6 +131,17 @@ mod tests {
             },
             "seccomp": {
                 "defaultAction": "SCMP_ACT_ALLOW"
+            },
+            "rootfsPropagation": "shared",
+            "maskedPaths": [
+                "/proc/kcore"
+            ],
+            "readonlyPaths": [
+                "/proc/sys"
+            ],
+            "mountLabel": "system_u:object_r:svirt_sandbox_file_t:s0:c715,c811",
+            "personality": {
+                "domain": "LINUX"
             }
         });
 
@@ -134,6 +162,13 @@ mod tests {
             intel_rdt: Some(IntelRDT::new()),
             sysctl: Some(sysctl),
             seccomp: Some(Seccomp::new("SCMP_ACT_ALLOW")),
+            rootfs_propagation: Some(String::from("shared")),
+            masked_paths: Some(vec![String::from("/proc/kcore")]),
+            readonly_paths: Some(vec![String::from("/proc/sys")]),
+            mount_label: Some(String::from(
+                "system_u:object_r:svirt_sandbox_file_t:s0:c715,c811",
+            )),
+            personality: Some(Personality::new("LINUX")),
         })
         .unwrap();
 
