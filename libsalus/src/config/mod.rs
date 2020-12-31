@@ -5,6 +5,7 @@ mod mount;
 mod process;
 mod rlimit;
 mod root;
+pub mod solaris;
 mod user;
 pub mod windows;
 
@@ -43,6 +44,9 @@ pub struct Config {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub windows: Option<windows::Windows>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub solaris: Option<solaris::Solaris>,
 }
 
 impl Config {
@@ -56,13 +60,16 @@ impl Config {
             user: None,
             linux: None,
             windows: None,
+            solaris: None,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{linux::Linux, windows::Windows, Config, Mount, Process, Root, User};
+    use super::{
+        linux::Linux, solaris::Solaris, windows::Windows, Config, Mount, Process, Root, User,
+    };
     use serde_json;
 
     #[test]
@@ -96,7 +103,8 @@ mod tests {
                 "username": "pikachu"
             },
             "linux": {},
-            "windows": {}
+            "windows": {},
+            "solaris": {}
         });
 
         let got = serde_json::to_value(Config {
@@ -109,6 +117,7 @@ mod tests {
             }),
             linux: Some(Linux::new()),
             windows: Some(Windows::new()),
+            solaris: Some(Solaris::new()),
             ..Config::new("0.1.0")
         })
         .unwrap();
