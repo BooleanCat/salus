@@ -17,6 +17,7 @@ pub use process::Process;
 pub use rlimit::Rlimit;
 pub use root::Root;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 pub use user::User;
 
 #[serde(rename_all = "camelCase")]
@@ -50,6 +51,9 @@ pub struct Config {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vm: Option<vm::VM>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub annotations: Option<HashMap<String, String>>,
 }
 
 impl Config {
@@ -65,6 +69,7 @@ impl Config {
             windows: None,
             solaris: None,
             vm: None,
+            annotations: None,
         }
     }
 }
@@ -76,6 +81,7 @@ mod tests {
         Process, Root, User,
     };
     use serde_json;
+    use std::collections::HashMap;
 
     #[test]
     fn serialize() {
@@ -114,8 +120,14 @@ mod tests {
                 "kernel": {
                     "path": "/path/to/vmlinuz"
                 }
+            },
+            "annotations": {
+                "com.example.gpu-cores": "2"
             }
         });
+
+        let mut annotations = HashMap::new();
+        annotations.insert(String::from("com.example.gpu-cores"), String::from("2"));
 
         let got = serde_json::to_value(Config {
             root: Some(Root::new("/foo/bar")),
@@ -129,6 +141,7 @@ mod tests {
             windows: Some(Windows::new()),
             solaris: Some(Solaris::new()),
             vm: Some(VM::new(Kernel::new("/path/to/vmlinuz"))),
+            annotations: Some(annotations),
             ..Config::new("0.1.0")
         })
         .unwrap();
