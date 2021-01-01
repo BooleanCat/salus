@@ -7,6 +7,7 @@ mod rlimit;
 mod root;
 pub mod solaris;
 mod user;
+pub mod vm;
 pub mod windows;
 
 pub use capabilities::Capabilities;
@@ -15,9 +16,8 @@ pub use mount::Mount;
 pub use process::Process;
 pub use rlimit::Rlimit;
 pub use root::Root;
-pub use user::User;
-
 use serde::{Deserialize, Serialize};
+pub use user::User;
 
 #[serde(rename_all = "camelCase")]
 #[derive(Serialize, Deserialize, Debug)]
@@ -47,6 +47,9 @@ pub struct Config {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub solaris: Option<solaris::Solaris>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vm: Option<vm::VM>,
 }
 
 impl Config {
@@ -61,6 +64,7 @@ impl Config {
             linux: None,
             windows: None,
             solaris: None,
+            vm: None,
         }
     }
 }
@@ -68,7 +72,8 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::{
-        linux::Linux, solaris::Solaris, windows::Windows, Config, Mount, Process, Root, User,
+        linux::Linux, solaris::Solaris, vm::Kernel, vm::VM, windows::Windows, Config, Mount,
+        Process, Root, User,
     };
     use serde_json;
 
@@ -104,7 +109,12 @@ mod tests {
             },
             "linux": {},
             "windows": {},
-            "solaris": {}
+            "solaris": {},
+            "vm": {
+                "kernel": {
+                    "path": "/path/to/vmlinuz"
+                }
+            }
         });
 
         let got = serde_json::to_value(Config {
@@ -118,6 +128,7 @@ mod tests {
             linux: Some(Linux::new()),
             windows: Some(Windows::new()),
             solaris: Some(Solaris::new()),
+            vm: Some(VM::new(Kernel::new("/path/to/vmlinuz"))),
             ..Config::new("0.1.0")
         })
         .unwrap();
