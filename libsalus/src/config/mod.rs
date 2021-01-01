@@ -1,5 +1,7 @@
 mod capabilities;
 mod console_size;
+mod hook;
+mod hooks;
 pub mod linux;
 mod mount;
 mod process;
@@ -12,6 +14,8 @@ pub mod windows;
 
 pub use capabilities::Capabilities;
 pub use console_size::ConsoleSize;
+pub use hook::Hook;
+pub use hooks::Hooks;
 pub use mount::Mount;
 pub use process::Process;
 pub use rlimit::Rlimit;
@@ -53,6 +57,9 @@ pub struct Config {
     pub vm: Option<vm::VM>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub hooks: Option<Hooks>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub annotations: Option<HashMap<String, String>>,
 }
 
@@ -69,6 +76,7 @@ impl Config {
             windows: None,
             solaris: None,
             vm: None,
+            hooks: None,
             annotations: None,
         }
     }
@@ -77,7 +85,7 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::{
-        linux::Linux, solaris::Solaris, vm::Kernel, vm::VM, windows::Windows, Config, Mount,
+        linux::Linux, solaris::Solaris, vm::Kernel, vm::VM, windows::Windows, Config, Hooks, Mount,
         Process, Root, User,
     };
     use serde_json;
@@ -121,6 +129,7 @@ mod tests {
                     "path": "/path/to/vmlinuz"
                 }
             },
+            "hooks": {},
             "annotations": {
                 "com.example.gpu-cores": "2"
             }
@@ -141,6 +150,7 @@ mod tests {
             windows: Some(Windows::new()),
             solaris: Some(Solaris::new()),
             vm: Some(VM::new(Kernel::new("/path/to/vmlinuz"))),
+            hooks: Some(Hooks::new()),
             annotations: Some(annotations),
             ..Config::new("0.1.0")
         })
